@@ -242,6 +242,11 @@ class xmlHandler:
             results.append(subelem)
         return results
 
+    def findInSub(self,node,match):
+        results = []
+        for subelem in node.findall(match):
+            results.append(subelem)
+        return results
 
     def printCnt(self):
         print(self.cnt)

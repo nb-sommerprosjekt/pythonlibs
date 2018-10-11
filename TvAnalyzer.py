@@ -5,28 +5,24 @@ from xmlHandler import xmlHandler
 from sandboxLogger import SandboxLogger
 
 from google.cloud import videointelligence
-#from unidecode import unidecode
-from google.cloud import translate
+from unidecode import unidecode
+
 
 myLogger = SandboxLogger("myLogger", "logging_config.config")
 
 
 class TvAnalyzer:
     cnt = 0
-    #translate_client
 
     def __init__(self):
         cnt = 0
-        self.translate_client = translate.Client()
 
-    def translate(self,text1, target='no'):
-
-
-        translation = self.translate_client.translate(
-            text1,
-            target_language=target)
-        return format(translation['translatedText'])
-
+    def remove_non_ascii(self,text):
+        if type(text) == str:
+            myutext = text.encode("utf-8")
+            return unidecode(myutext)
+        else:
+            return text
 
     def write_shots_from_result_ascii(self, result, outputFilename):
         # first result is retrieved because a single video was processed
@@ -55,7 +51,7 @@ class TvAnalyzer:
             # print(word_info)
             xmlHdl.addSubElement(root, "Shot", attr=attrib, text=format(str(i)))
         # handlerTC.prettyPrintToScreen()
-        xmlHdl.prettyPrint2(outputFilename)
+        xmlHdl.prettyPrint(outputFilename)
 
     def write_explicitContent_from_result_xml(self, result, outputFilename):
 
@@ -68,7 +64,7 @@ class TvAnalyzer:
             frame_time = frame.time_offset.seconds + frame.time_offset.nanos / 1e9
             attrib = {'Bilde_tid': str(round(frame_time, 2))}
             xmlHdl.addSubElement(root, "Bilde", attr=attrib, text=format(likely_string[frame.pornography_likelihood]))
-        xmlHdl.prettyPrint2(outputFilename)
+        xmlHdl.prettyPrint(outputFilename)
 
     def print_shots_from_result(self, result):
         # first result is retrieved because a single video was processed
@@ -299,10 +295,10 @@ class TvAnalyzer:
         segment_labels = result.annotation_results[0].segment_label_annotations
         for i, segment_label in enumerate(segment_labels):
             #print(format(segment_label.entity.description))
-            labelNode = xmlHdl.makeElement("Label", self.translate(str(segment_label.entity.description)))
+            labelNode = xmlHdl.makeElement("Label", str(segment_label.entity.description))
             xmlHdl.addNode(labelNode)
             for category_entity in segment_label.category_entities:
-                catNode = xmlHdl.makeElement("Kategori", self.translate(str(category_entity.description)))
+                catNode = xmlHdl.makeElement("Kategori", str(category_entity.description))
                 xmlHdl.addSubNode(labelNode, catNode)
                 #print (str(category_entity.description))
             for i, segment in enumerate(segment_label.segments):
@@ -327,11 +323,11 @@ class TvAnalyzer:
         ShotLabelAnnotNodes = xmlHdl.makeElement("shotAnnotations","shotannotations")
         xmlHdl.addNode(ShotLabelAnnotNodes)
         for i, shot_label in enumerate(shot_labels):
-            ShotLabelAnnotNode = xmlHdl.makeElement("shotLabel", self.translate(str(shot_label.entity.description)))
+            ShotLabelAnnotNode = xmlHdl.makeElement("shotLabel", str(shot_label.entity.description))
             xmlHdl.addSubNode(ShotLabelAnnotNodes, ShotLabelAnnotNode)
             for category_entity in shot_label.category_entities:
                 ShotLabelAnnotNodeCategory = xmlHdl.makeElement("shotLabelCategory",
-                                                                self.translate(str(category_entity.description)))
+                                                                str(category_entity.description))
                 xmlHdl.addSubNode(ShotLabelAnnotNode, ShotLabelAnnotNodeCategory)
 
                 for i, shot in enumerate(shot_label.segments):
@@ -352,10 +348,10 @@ class TvAnalyzer:
         FrameLabelAnnotNodes = xmlHdl.makeElement("frameAnnotations", "frameannotations")
         xmlHdl.addNode(FrameLabelAnnotNodes)
         for i, frame_label in enumerate(frame_labels):
-            FrameLabelAnnotNode = xmlHdl.makeElement("frameLabel", self.translate(str(frame_label.entity.description)))
+            FrameLabelAnnotNode = xmlHdl.makeElement("frameLabel", str(frame_label.entity.description))
             xmlHdl.addSubNode(FrameLabelAnnotNodes, FrameLabelAnnotNode)
             for category_entity in frame_label.category_entities:
-                CategoryLabelAnnotNode = xmlHdl.makeElement("categoryLabel", self.translate(str(category_entity.description)))
+                CategoryLabelAnnotNode = xmlHdl.makeElement("categoryLabel", str(category_entity.description))
                 xmlHdl.addSubNode(FrameLabelAnnotNode, CategoryLabelAnnotNode)
 
             # Each frame_label_annotation has many frames,
@@ -370,7 +366,7 @@ class TvAnalyzer:
 
         #xmlHdl.printTreeToFile(outputFilename)
         #xmlHdl.prettyPrintToScreen()
-        xmlHdl.prettyPrint2(outputFilename)
+        xmlHdl.prettyPrint(outputFilename)
         #xmlHdl3.prettyPrintToScreen()
 
         #xmlHdl2.printTreeToFile(outputFilename)
